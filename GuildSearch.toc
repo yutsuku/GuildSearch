@@ -1,0 +1,17 @@
+## Interface: 11200
+## Title: GuildSearch
+## Author: moh
+## Version: 1.0
+
+Global.lua
+
+locale\Locale.lua
+locale\LocaleTable.lua
+
+locale\enUS.lua
+
+Core.lua
+Commands.lua
+Font.lua
+UI.lua
+Main.lua
