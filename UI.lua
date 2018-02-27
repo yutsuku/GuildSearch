@@ -9,9 +9,13 @@ GuildSearch.main_frame = main_frame
 -- remove one row to make space
 _G.GuildPlayerStatusFrame:ClearAllPoints()
 _G.GuildPlayerStatusFrame:SetPoint('TOPLEFT', 0, -16)
+_G.GuildStatusFrame:ClearAllPoints()
+_G.GuildStatusFrame:SetPoint('TOPLEFT', 0, -16)
 
 _G.GuildFrameButton1:ClearAllPoints()
 _G.GuildFrameButton1:SetPoint('TOPLEFT', 15, -95, _G.GuildFrame)
+_G.GuildFrameGuildStatusButton1:ClearAllPoints()
+_G.GuildFrameGuildStatusButton1:SetPoint('TOPLEFT', 15, -95, _G.GuildFrame)
 
 _G.GUILDMEMBERS_TO_DISPLAY = 12
 _G.GuildFrameButton13:Hide()

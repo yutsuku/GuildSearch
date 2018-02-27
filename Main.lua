@@ -48,7 +48,7 @@ function GuildSearch:BuildList(searchText)
 	self.found = {}
 	
 	local numGuildMembers = GetNumGuildMembers()
-	local name, rank, rankIndex, level, class, zone, note, officernote, online
+	local name, rank, rankIndex, level, class, zone, note, officernote, online, status
 	local match
 	local matcher = self:FuzzyMatcher(searchText)
 	local rating
@@ -56,7 +56,7 @@ function GuildSearch:BuildList(searchText)
 	for i = 1, numGuildMembers, 1 do
 		rating = 0
 		match = nil
-		name, rank, rankIndex, level, class, zone, note, officernote, online = GetGuildRosterInfo(i)
+		name, rank, rankIndex, level, class, zone, note, officernote, online, status = GetGuildRosterInfo(i)
 		
 		local nameRating = name and matcher(name)
 		local noteRating = note and matcher(note)
@@ -72,7 +72,7 @@ function GuildSearch:BuildList(searchText)
 		end
 
 		if rating and rating > 1 then
-			tinsert(self.found, {i, rating, name, rank, rankIndex, level, class, zone, note, officernote, online})
+			tinsert(self.found, {i, rating, name, rank, rankIndex, level, class, zone, note, officernote, status, online})
 		end
 		-- sort by rating, name
 		sort(self.found, function(a, b)
@@ -89,49 +89,98 @@ function GuildSearch:UpdateListing()
 	FauxScrollFrame_Update(_G.GuildListScrollFrame, getn(self.found), GUILDMEMBERS_TO_DISPLAY, FRIENDS_FRAME_GUILD_HEIGHT)
 	
 	local button, button_name, button_zone, button_level, button_class
-	local index, rating, name, rank, rankIndex, level, class, zone, note, officernote, online
+	local index, rating, name, rank, rankIndex, level, class, zone, note, officernote, online, status
 	local guildOffset = FauxScrollFrame_GetOffset(GuildListScrollFrame)
 	local guildIndex
 	
 	if getn(self.found) > 0 then
-		for i=1, GUILDMEMBERS_TO_DISPLAY, 1 do
-			button = _G[format('GuildFrameButton%d', i)]
-			button_name = _G[format('GuildFrameButton%dName', i)]
-			button_zone = _G[format('GuildFrameButton%dZone', i)]
-			button_level = _G[format('GuildFrameButton%dLevel', i)]
-			button_class = _G[format('GuildFrameButton%dClass', i)]
-			
-			if self.found[i] then
-				index, rating, name, rank, rankIndex, level, class, zone, note, officernote, online = unpack(self.found[i])
+		if FriendsFrame.playerStatusFrame then
+			for i=1, GUILDMEMBERS_TO_DISPLAY, 1 do
+				button = _G[format('GuildFrameButton%d', i)]
+				button_name = _G[format('GuildFrameButton%dName', i)]
+				button_zone = _G[format('GuildFrameButton%dZone', i)]
+				button_level = _G[format('GuildFrameButton%dLevel', i)]
+				button_class = _G[format('GuildFrameButton%dClass', i)]
 				
-				button_name:SetText(name)
-				button_zone:SetText(zone)
-				button_level:SetText(level)
-				button_class:SetText(class)
+				if self.found[i] then
+					index, rating, name, rank, rankIndex, level, class, zone, note, officernote, status, online = unpack(self.found[i])
+					
+					button_name:SetText(name)
+					button_zone:SetText(zone)
+					button_level:SetText(level)
+					button_class:SetText(class)
 
-				button.guildIndex = index or 0
-				
-				if ( not online ) then
-					button_name:SetTextColor(0.5, 0.5, 0.5)
-					button_zone:SetTextColor(0.5, 0.5, 0.5)
-					button_level:SetTextColor(0.5, 0.5, 0.5)
-					button_class:SetTextColor(0.5, 0.5, 0.5)
+					button.guildIndex = index or 0
+					
+					if ( not online ) then
+						button_name:SetTextColor(0.5, 0.5, 0.5)
+						button_zone:SetTextColor(0.5, 0.5, 0.5)
+						button_level:SetTextColor(0.5, 0.5, 0.5)
+						button_class:SetTextColor(0.5, 0.5, 0.5)
+					else
+						button_name:SetTextColor(1.0, 0.82, 0.0)
+						button_zone:SetTextColor(1.0, 1.0, 1.0)
+						button_level:SetTextColor(1.0, 1.0, 1.0)
+						button_class:SetTextColor(1.0, 1.0, 1.0)
+					end
+					
+					if GetGuildRosterSelection() == button.guildIndex then
+						button:LockHighlight()
+					else
+						button:UnlockHighlight()
+					end
+					
+					button:Show()
 				else
-					button_name:SetTextColor(1.0, 0.82, 0.0)
-					button_zone:SetTextColor(1.0, 1.0, 1.0)
-					button_level:SetTextColor(1.0, 1.0, 1.0)
-					button_class:SetTextColor(1.0, 1.0, 1.0)
+					button:Hide()
 				end
+			end
+		else
+			for i=1, GUILDMEMBERS_TO_DISPLAY, 1 do
+				button = _G[format('GuildFrameGuildStatusButton%d', i)]
+				button_name = _G[format('GuildFrameGuildStatusButton%dName', i)]
+				button_rank = _G[format('GuildFrameGuildStatusButton%dRank', i)]
+				button_note = _G[format('GuildFrameGuildStatusButton%dNote', i)]
+				button_online = _G[format('GuildFrameGuildStatusButton%dOnline', i)]
 				
-				if GetGuildRosterSelection() == button.guildIndex then
-					button:LockHighlight()
+				if self.found[i] then
+					index, rating, name, rank, rankIndex, level, class, zone, note, officernote, status, online = unpack(self.found[i])
+					
+					button.guildIndex = index or 0
+					
+					button_name:SetText(name)
+					button_rank:SetText(rank)
+					button_note:SetText(note)
+					
+					if online then
+						if status == '' then
+							button_online:SetText(GUILD_ONLINE_LABEL)
+						else
+							button_online:SetText(online)
+						end
+						
+						button_name:SetTextColor(1.0, 0.82, 0.0)
+						button_rank:SetTextColor(1.0, 1.0, 1.0)
+						button_note:SetTextColor(1.0, 1.0, 1.0)
+						button_online:SetTextColor(1.0, 1.0, 1.0)
+					else
+						button_online:SetText(_G.GuildFrame_GetLastOnline(button.guildIndex))
+						button_name:SetTextColor(0.5, 0.5, 0.5)
+						button_rank:SetTextColor(0.5, 0.5, 0.5)
+						button_note:SetTextColor(0.5, 0.5, 0.5)
+						button_online:SetTextColor(0.5, 0.5, 0.5)
+					end
+					
+					if GetGuildRosterSelection() == button.guildIndex then
+						button:LockHighlight()
+					else
+						button:UnlockHighlight()
+					end
+					
+					button:Show()
 				else
-					button:UnlockHighlight()
+					button:Hide()
 				end
-				
-				button:Show()
-			else
-				button:Hide()
 			end
 		end
 	else
